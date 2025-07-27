@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <title>Calculadora Django</title>
+    <link rel="stylesheet" href="{% static 'calc/calculator.css' %}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Calculadora Avançada</h1>
+            <p>calculadora com histórico de operações</p>
+            <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                {% csrf_token %}
+                <button class="logout-btn" type="submit">Logout</button>
+            </form>
+        </div>
+        <div class="calc-hist-flex">
+            <div class="calc-area">
+                <form id="calc-form" class="calc-form" method="post" autocomplete="off" style="display:flex; flex-direction:column; align-items:center;">
+                    {% csrf_token %}
+                    <div class="display" id="display"></div>
+                    <input type="hidden" name="number1" id="number1">
+                    <input type="hidden" name="operation" id="operation">
+                    <input type="hidden" name="number2" id="number2">
+                    <div class="keypad">
+                        <button type="button" class="clear" onclick="clearAll()">C</button>
+                        <button type="button" class="perc" onclick="setOp('%')">%</button>
+                        <button type="button" class="op" onclick="setOp('*')">×</button>
+                        <button type="button" class="op" onclick="setOp('/')">÷</button>
+                        <button type="button" onclick="press('7')">7</button>
+                        <button type="button" onclick="press('8')">8</button>
+                        <button type="button" onclick="press('9')">9</button>
+                        <button type="button" class="op" onclick="setOp('+')">+</button>
+                        <button type="button" onclick="press('4')">4</button>
+                        <button type="button" onclick="press('5')">5</button>
+                        <button type="button" onclick="press('6')">6</button>
+                        <button type="button" class="op" onclick="setOp('-')">-</button>
+                        <button type="button" onclick="press('1')">1</button>
+                        <button type="button" onclick="press('2')">2</button>
+                        <button type="button" onclick="press('3')">3</button>
+                        <button type="submit" class="eq">=</button>
+                        <button type="button" onclick="press('0')" style="grid-column: 1 / span 2;">0</button>
+                        <button type="button" onclick="press('.')">.</button>
+                    </div>
+                </form>
+            </div>
+            <div class="history-box">
+                <h2>Histórico</h2>
+                <ul>
+                    {% for op in historico %}
+                        <li>{{ op.parametros }} = {{ op.resultado }}</li>
+                    {% empty %}
+                        <li>Nenhuma operação realizada ainda.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <script>
+        let n1 = '', n2 = '', op = '', state = 'n1';
+        const display = document.getElementById('display');
+        const number1 = document.getElementById('number1');
+        const number2 = document.getElementById('number2');
+        const operation = document.getElementById('operation');
+
+        function press(num) {
+            if (state === 'n1') {
+                n1 += num;
+            } else {
+                n2 += num;
+            }
+            updateDisplay();
+        }
+        function setOp(o) {
+            if (!n1) return;
+            if (op && n2) return; // não permite trocar operação após digitar n2
+            op = o;
+            state = 'n2';
+            updateDisplay();
+        }
+        function clearAll() {
+            n1 = '';
+            n2 = '';
+            op = '';
+            state = 'n1';
+            updateDisplay();
+        }
+        function updateDisplay() {
+            display.textContent = n1 + (op ? ' ' + op + ' ' : '') + n2;
+            number1.value = n1;
+            number2.value = n2;
+            operation.value = op;
+        }
+        // Limpa ao enviar
+        document.getElementById('calc-form').addEventListener('submit', function() {
+            setTimeout(clearAll, 100);
+        });
+        // Inicializa display
+        updateDisplay();
+    </script>
+</body>
+</html> 
